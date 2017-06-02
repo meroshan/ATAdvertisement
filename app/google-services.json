@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "679349987820",
+    "firebase_url": "https://advtech-e98fc.firebaseio.com",
+    "project_id": "advtech-e98fc",
+    "storage_bucket": "advtech-e98fc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679349987820:android:b3fbd2dc77025be5",
+        "android_client_info": {
+          "package_name": "cpm.advancetect.atadvertisement"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "679349987820-jrn57imdvs3a4i945rrdqpeddn1lre0t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAC6xSpUaJqAlmsGciyft-JhYLW2gldbDw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

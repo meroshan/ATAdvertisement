@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AT Advertisement</string>
+    <string name="spinner_center_title">Choose center</string>
+    <string-array name="spinner_item">
+        <item>Select center</item>
+        <item>center 1</item>
+        <item>center 2</item>
+        <item>center 3</item>
+        <item>center 4</item>
+    </string-array>
+</resources>
