@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">AT Advertisement</string>
+    <string name="app_name">Digital Signage</string>
     <string name="spinner_center_title">Choose center</string>
+    <string name="preference_file_key">com.advancetect.advertisement.PREFERENCE_FILE_KEY</string>
     <string-array name="spinner_item">
         <item>Select center</item>
         <item>center 1</item>
