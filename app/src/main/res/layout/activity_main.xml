@@ -8,13 +8,6 @@
     android:orientation="vertical"
     tools:context="cpm.advancetect.atadvertisement.MainActivity">
 
-    <Button
-        android:id="@+id/folder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="create folder"
-        android:visibility="gone"/>
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

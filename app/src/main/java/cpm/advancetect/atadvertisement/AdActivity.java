@@ -1,24 +1,30 @@
 package cpm.advancetect.atadvertisement;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,6 +33,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.File;
 import java.util.ArrayList;
 
+import static cpm.advancetect.atadvertisement.MyApplication.MY_PERMISSIONS_EXTERNAL_STORAGE;
 import static cpm.advancetect.atadvertisement.MyApplication.imageListLocal;
 import static cpm.advancetect.atadvertisement.MyApplication.mDatabaseRef;
 import static cpm.advancetect.atadvertisement.MyApplication.sharedPreferences;
@@ -36,7 +43,7 @@ import static cpm.advancetect.atadvertisement.MyApplication.videoListLocal;
  * Created by rahul on 05-Jun-17.
  */
 
-public class AdActivity extends AppCompatActivity {
+public class AdActivity extends Activity {
     public static final String ACTION_RESP = "com.mamlambo.intent.action.MESSAGE_PROCESSED";
     public static final String MAIN_DIRECTORY = "Digital Signage";
     public static final String VIDEOS_DIRECTORY = "Videos";
@@ -66,7 +73,14 @@ public class AdActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        h.removeCallbacks(r);
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        playVideos();
+        //playImages();
     }
 
     @Override
@@ -74,20 +88,42 @@ public class AdActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        final View decor = getWindow().getDecorView();
+        decor.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            public void onSystemUiVisibilityChange(int visibility) {
+                android.util.Log.d("d", "onSystemUiVisibilityChange");
+                new Handler().postDelayed(new Runnable() {
+                    public void run() {
+                        decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_IMMERSIVE);
+                    }
+                }, 1500);
+            }
+        });
+
+        decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                | View.SYSTEM_UI_FLAG_IMMERSIVE);
 
         setContentView(R.layout.activity_ad);
 
         videoView = (VideoView) findViewById(R.id.videoView);
         imageView = (ImageView) findViewById(R.id.imageView);
         marqueeText = (TextView) findViewById(R.id.marqueeText);
-
         marqueeText.setSelected(true);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            localImageDir = createLocalDirectory(IMAGES_DIRECTORY);
+            localVideoDir = createLocalDirectory(VIDEOS_DIRECTORY);
+
+            getLocalFileList(IMAGES_DIRECTORY, 0);
+            getLocalFileList(VIDEOS_DIRECTORY, 1);
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_EXTERNAL_STORAGE);
+            return;
+        }
+
         String marquee_text = sharedPreferences.getString(MARQUEE_TEXT, "");
         if (!marquee_text.equals("")) {
             marqueeText.setVisibility(View.VISIBLE);
@@ -100,34 +136,59 @@ public class AdActivity extends AppCompatActivity {
         receiver = new ResponseReceiver();
         registerReceiver(receiver, filter);
 
-        //     text = (TextView) findViewById(R.id.text);
-
         tempCenter = selectedCenter = sharedPreferences.getString("current_center", "NULL");
-
-//        text.setText(selectedCenter);
 
         databaseReference = mDatabaseRef.child(selectedCenter);
 
-        localImageDir = createLocalDirectory(IMAGES_DIRECTORY);
-        localVideoDir = createLocalDirectory(VIDEOS_DIRECTORY);
-
-        getLocalFileList(IMAGES_DIRECTORY, 0);
-        getLocalFileList(VIDEOS_DIRECTORY, 1);
 
         playVideos();
         playImages();
 
         getFileListFromServer();
 
+//        Glide.with(context)
+//                .load(new String[]{"anc"})
+//                .into(imageView);
+
+        Intent i = new Intent(this, LayoutSelector.class);
+        //startActivityForResult(i, 1);
+
         //videoView.setVideoPath("/storage/emulated/0/Digital Signage/g.MP4");
-        videoView.setMediaController(new MediaController(this));
+        //videoView.setMediaController(new MediaController(this));
         //videoView.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_EXTERNAL_STORAGE) {
+            if (grantResults.length > 0) {
+                Toast.makeText(this, "permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "not granted", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                //int id = Integer.parseInt(data.getStringExtra("id"));
+                String id = data.getStringExtra("id");
+                if (id.equals("one")) {
+                    Toast.makeText(getApplicationContext(), "Layout 1 selected", Toast.LENGTH_SHORT).show();
+                } else if (id.equals("two")) {
+                }
+                //Toast.makeText(context, "Layout 2 selected", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void playImages() {
         r = new Runnable() {
             int i = 0;
 
+            //9780286280
             @Override
             public void run() {
                 // do stuff then
@@ -138,7 +199,6 @@ public class AdActivity extends AppCompatActivity {
                     Glide.with(AdActivity.this)
                             .load(f)
                             .into(imageView);
-
                     i++;
                     if (i > imageListLocal.size() - 1) {
                         i = 0;
@@ -153,10 +213,10 @@ public class AdActivity extends AppCompatActivity {
     }
 
     private void playVideos() {
-        if (videoView == null) {
-            Log.d("ImageHandler", "videoView is null");
-            return;
-        }
+//        if (videoView == null) {
+//            Log.d("ImageHandler", "videoView is null");
+//            return;
+//        }
         if (videoListLocal.size() <= 0) {
             Log.d(this.getClass().getName(), "video playlist size is zero");
             //return;
@@ -204,19 +264,64 @@ public class AdActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //serverFileList.clear();
                 //urlList.clear();
-                imageListServer.clear();
 
-                for (DataSnapshot t : dataSnapshot.getChildren()) {
-                    Log.d(this.getClass().getName(), "t_key = " + t.getKey() + " t_value = " + t.getValue());
-                    DataModel model = t.getValue(DataModel.class);
-                    //Log.d("dataModel", model.getname() + " " + model.geturl());
-                    Log.d("dataModel", model.name + " " + model.url);
-                    //serverFileList.add(model.name);
-                    //urlList.add(model.url);
-                    imageListServer.add(model);
+                if (dataSnapshot.exists()) {
+                    imageListServer.clear();
+                    for (DataSnapshot t : dataSnapshot.getChildren()) {
+                        Log.d(this.getClass().getName(), "t_key = " + t.getKey() + " t_value = " + t.getValue());
+                        DataModel model = t.getValue(DataModel.class);
+                        //Log.d("dataModel", model.getname() + " " + model.geturl());
+                        //Log.d("dataModel", model.name + " " + model.url);
+                        //serverFileList.add(model.name);
+                        //urlList.add(model.url);
+                        if (!imageListServer.contains(model)) {
+                            imageListServer.add(model);
+                            Log.d("dataModel_image", model.name + " " + model.url);
+                        }
+                    }
+
+                    downloadFiles(0);
                 }
+            }
 
-                downloadFiles(0);
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        tempRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                //
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                //
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                Log.d("onChildEventListener", dataSnapshot.getKey() + " " + dataSnapshot.getValue());
+                DataModel dataModel = dataSnapshot.getValue(DataModel.class);
+                getLocalFileList(IMAGES_DIRECTORY, 0);
+                String fileDir = (new File(localImageDir, dataModel.name)).getAbsolutePath();
+                Log.d("onChildEventListener", "fileDir:" + fileDir);
+                if (imageListLocal.contains(fileDir)) {
+                    Log.d("onChildEventListener", "delete " + fileDir);
+                    if (deleteFile(fileDir)) {
+                        Log.d("onChildEventListener", "successfully deleted");
+                        imageListLocal.remove(fileDir);
+                    } else {
+                        Log.d("onChildEventListener", "Unable to delete file");
+                    }
+                }
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
             }
 
             @Override
@@ -231,13 +336,13 @@ public class AdActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //serverFileList.clear();
                 //urlList.clear();
-                videoListServer.clear();
 
                 for (DataSnapshot t : dataSnapshot.getChildren()) {
+                    videoListServer.clear();
                     Log.d(this.getClass().getName(), "t_key = " + t.getKey() + " t_value = " + t.getValue());
                     DataModel model = t.getValue(DataModel.class);
                     //Log.d("dataModel", model.getname() + " " + model.geturl());
-                    Log.d("dataModel", model.name + " " + model.url);
+                    Log.d("dataModel_video", model.name + " " + model.url);
                     //serverFileList.add(model.name);
                     //urlList.add(model.url);
                     videoListServer.add(model);
@@ -250,6 +355,11 @@ public class AdActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public boolean deleteFile(String fileDir) {
+        File file = new File(fileDir);
+        return file.delete();
     }
 
     public File createLocalDirectory(String dir) {
@@ -283,7 +393,8 @@ public class AdActivity extends AppCompatActivity {
         if (listFiles != null && listFiles.length > 0) {
             if (subDirId == 0)
                 for (File tempFile : listFiles) {
-                    imageListLocal.add(tempFile.getAbsolutePath());
+                    if (!imageListLocal.contains(tempFile.getAbsolutePath()))
+                        imageListLocal.add(tempFile.getAbsolutePath());
                 }
             else
                 for (File tempFile : listFiles) {
@@ -375,6 +486,7 @@ public class AdActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(receiver);
+        h.removeCallbacks(r);
         Log.d("onDestroy", "unregisterReceiver");
     }
 

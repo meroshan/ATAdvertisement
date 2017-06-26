@@ -22,9 +22,9 @@ public class MyApplication extends Application {
     public static FirebaseStorage mFirebaseStorage;
     public static StorageReference mStorageReference;
     public static SharedPreferences sharedPreferences;
+    public static final int MY_PERMISSIONS_EXTERNAL_STORAGE = 1;
     public static ArrayList<String> videoListLocal = new ArrayList<>();
     public static ArrayList<String> imageListLocal = new ArrayList<>();
-    public static String marqueeText;
 
     public static Context getInstance() {
         if (null == instance) {
