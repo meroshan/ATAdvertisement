@@ -2,11 +2,7 @@ package cpm.advancetect.atadvertisement;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -25,16 +21,37 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cpm.advancetect.atadvertisement.MyApplication.MY_PERMISSIONS_EXTERNAL_STORAGE;
 import static cpm.advancetect.atadvertisement.MyApplication.mDatabaseRef;
 import static cpm.advancetect.atadvertisement.MyApplication.sharedPreferences;
 
+/**
+ * This is the main Class for fetching centre list from the cloud and showing in a list
+ */
 public class MainActivity extends AppCompatActivity {
+
+    /**
+     * list of centers
+     */
     ArrayList<String> list = new ArrayList<>();
+
+    /**
+     * list adapter for list
+     */
     ArrayAdapter<String> adapter;
+
+    /**
+     * Tag for logging purpose
+     */
     String TAG = "main_activity";
+
+    /**
+     * listView to show centres
+     */
     private ListView listView;
 
+    /**
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,16 +60,21 @@ public class MainActivity extends AppCompatActivity {
         //startActivity(new Intent(this, MainActivity.class));
         Log.d(TAG, "onCreate called");
 
+        /**
+         * initializing FireBase reference & listView
+         */
         mDatabaseRef = FirebaseDatabase.getInstance().getReference();
         listView = (ListView) findViewById(R.id.listView);
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_EXTERNAL_STORAGE);
-            return;
-        }
-
-        if (!sharedPreferences.getString("current_center", "NULL").equals("NULL"))
+        /**
+         * this checks if the centre name is stored in the sharedPreference.
+         * If center name is saved then start AdActivity and finish this activity
+         * so that user can't come back to this activity.
+         */
+        if (!sharedPreferences.getString("current_center", "NULL").equals("NULL")) {
             startActivity(new Intent(MainActivity.this, AdActivity.class));
+            finish();
+        }
 
         adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, list);
         listView.setAdapter(adapter);
@@ -123,19 +145,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume called");
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == MY_PERMISSIONS_EXTERNAL_STORAGE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Permission granted");
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-            } else {
-                Log.d(TAG, "Please allow storage permission");
-                Toast.makeText(this, "Please allow storage permission", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
     }
 }

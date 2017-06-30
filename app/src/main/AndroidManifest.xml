@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:noHistory="true"
             android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -29,6 +30,13 @@
             android:screenOrientation="sensorLandscape"/>
 
         <activity android:name=".LayoutSelector"/>
+
+        <activity android:name=".TextEditor">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+            </intent-filter>
+        </activity>
 
         <service android:name=".DownloadService"/>
 

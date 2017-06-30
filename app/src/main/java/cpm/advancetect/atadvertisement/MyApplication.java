@@ -17,12 +17,18 @@ import java.util.ArrayList;
  */
 
 public class MyApplication extends Application {
+    public static final int MY_PERMISSIONS_EXTERNAL_STORAGE = 1;
+    public static final String HEADER_TEXT = "header_text";
+    public static final String HEADER_TEXT_SIZE = "header_text_size";
+    public static final String HEADER_TEXT_HINT = "Enter some text here";
+    public static final String FOOTER_TEXT = "footer_text";
+    public static final String FOOTER_TEXT_SIZE = "footer_text_size";
+    public static final String FOOTER_TEXT_HINT = "Enter some text here";
     public static MyApplication instance = null;
     public static DatabaseReference mDatabaseRef;
     public static FirebaseStorage mFirebaseStorage;
     public static StorageReference mStorageReference;
     public static SharedPreferences sharedPreferences;
-    public static final int MY_PERMISSIONS_EXTERNAL_STORAGE = 1;
     public static ArrayList<String> videoListLocal = new ArrayList<>();
     public static ArrayList<String> imageListLocal = new ArrayList<>();
 
@@ -41,7 +47,7 @@ public class MyApplication extends Application {
         mFirebaseStorage = FirebaseStorage.getInstance("gs://advtech-e98fc.appspot.com");
         mStorageReference = mFirebaseStorage.getReference();
         sharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        //marqueeText = "";
+        //footer = "";
         Log.d(this.getClass().getName(), "onCreate called");
     }
 }

@@ -2,8 +2,10 @@ package cpm.advancetect.atadvertisement;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -18,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +36,12 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.File;
 import java.util.ArrayList;
 
+import static cpm.advancetect.atadvertisement.MyApplication.FOOTER_TEXT;
+import static cpm.advancetect.atadvertisement.MyApplication.FOOTER_TEXT_HINT;
+import static cpm.advancetect.atadvertisement.MyApplication.FOOTER_TEXT_SIZE;
+import static cpm.advancetect.atadvertisement.MyApplication.HEADER_TEXT;
+import static cpm.advancetect.atadvertisement.MyApplication.HEADER_TEXT_HINT;
+import static cpm.advancetect.atadvertisement.MyApplication.HEADER_TEXT_SIZE;
 import static cpm.advancetect.atadvertisement.MyApplication.MY_PERMISSIONS_EXTERNAL_STORAGE;
 import static cpm.advancetect.atadvertisement.MyApplication.imageListLocal;
 import static cpm.advancetect.atadvertisement.MyApplication.mDatabaseRef;
@@ -41,40 +50,75 @@ import static cpm.advancetect.atadvertisement.MyApplication.videoListLocal;
 
 /**
  * Created by rahul on 05-Jun-17.
+ * This activity is for displaying contents like images, texts & videos
  */
 
 public class AdActivity extends Activity {
+
+    /**
+     * Constants
+     */
     public static final String ACTION_RESP = "com.mamlambo.intent.action.MESSAGE_PROCESSED";
     public static final String MAIN_DIRECTORY = "Digital Signage";
     public static final String VIDEOS_DIRECTORY = "Videos";
     public static final String IMAGES_DIRECTORY = "Images";
-    public static final String MARQUEE_TEXT = "marquee_text";
+    //public static final String MARQUEE_TEXT = "marquee_text";
     //final String STORAGE_PATH = Environment.getExternalStorageDirectory().toString() + "/" + "Digital Signage/";
 
+    /**
+     * stores video files URL of cloud server
+     */
     public ArrayList<DataModel> videoListServer = new ArrayList<>();
-    public ArrayList<DataModel> imageListServer = new ArrayList<>();
 
+    /**
+     * stores image files URL of cloud server
+     */
+    public ArrayList<DataModel> imageListServer = new ArrayList<>();
     protected ArrayList<String> serverFileList = new ArrayList<>();
     protected ArrayList<String> localFileList = new ArrayList<>();
     protected ArrayList<String> urlList = new ArrayList<>();
+
+    /**
+     * video counter
+     */
+
     int countVideo = 0;
+    /**
+     * image reference
+     */
+
     ImageView imageView;
+    /**
+     * local image file directory
+     */
+
     File localImageDir;
+    /**
+     * local video file directory
+     */
+
     File localVideoDir;
+    /**
+     * this handler is used to show list of images at some fixed interval
+     */
+
     Handler h = new Handler();
     Runnable r;
-    TextView marqueeText;
+
+    /**
+     * footer text
+     */
+    //TextView footer;
+    TextView header, footer;
+
+    /**
+     * current centre which user has selected
+     */
     private String selectedCenter;
     private String tempCenter;
     private DatabaseReference databaseReference;
     private ResponseReceiver receiver;
     private VideoView videoView;
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
 
     @Override
     protected void onResume() {
@@ -110,8 +154,19 @@ public class AdActivity extends Activity {
 
         videoView = (VideoView) findViewById(R.id.videoView);
         imageView = (ImageView) findViewById(R.id.imageView);
-        marqueeText = (TextView) findViewById(R.id.marqueeText);
-        marqueeText.setSelected(true);
+        header = (TextView) findViewById(R.id.header_text);
+        footer = (TextView) findViewById(R.id.footer_text);
+        initializeTexts();
+
+        //String headerText = sharedPreferences.getString(HEADER_TEXT, "Enter some text here");
+        //header.setText(headerText);
+        header.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //showDialog();
+                startActivityForResult(new Intent(AdActivity.this, TextEditor.class), 2);
+            }
+        });
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             localImageDir = createLocalDirectory(IMAGES_DIRECTORY);
@@ -124,12 +179,12 @@ public class AdActivity extends Activity {
             return;
         }
 
-        String marquee_text = sharedPreferences.getString(MARQUEE_TEXT, "");
-        if (!marquee_text.equals("")) {
-            marqueeText.setVisibility(View.VISIBLE);
-            marqueeText.setText(marquee_text + " " + marquee_text);
-        } else
-            marqueeText.setVisibility(View.GONE);
+//        String marquee_text = sharedPreferences.getString(FOOTER_TEXT, "");
+//        if (!marquee_text.equals("")) {
+//            footer.setVisibility(View.VISIBLE);
+//            footer.setText(marquee_text + " " + marquee_text);
+//        } else
+//            footer.setVisibility(View.GONE);
 
         IntentFilter filter = new IntentFilter(ACTION_RESP);
         filter.addCategory(Intent.CATEGORY_DEFAULT);
@@ -139,7 +194,6 @@ public class AdActivity extends Activity {
         tempCenter = selectedCenter = sharedPreferences.getString("current_center", "NULL");
 
         databaseReference = mDatabaseRef.child(selectedCenter);
-
 
         playVideos();
         playImages();
@@ -158,11 +212,61 @@ public class AdActivity extends Activity {
         //videoView.start();
     }
 
+    public void showDialog() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        final EditText edittext = new EditText(AdActivity.this);
+//        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.WRAP_CONTENT
+//        );
+//        params.setMargins(12, 12, 12, 12);
+
+        alert.setTitle("Enter new text");
+
+        edittext.setText(header.getText());
+        alert.setView(edittext);
+
+        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //What ever you want to do with the value
+                //Editable YouEditTextValue = edittext.getText();
+                //OR
+                String headerText = edittext.getText().toString();
+                sharedPreferences.edit().putString(HEADER_TEXT, headerText).apply();
+                header.setText(headerText);
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // what ever you want to do with No option.
+            }
+        });
+
+        alert.show();
+
+    }
+
+    /**
+     * this func is called when storage permission is granted
+     * so here we can initialize the important file reference
+     * initialization of {@link AdActivity#localVideoDir} & {@link AdActivity#localImageDir}
+     *
+     * @param requestCode  request code
+     * @param permissions  permissions
+     * @param grantResults grant results
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == MY_PERMISSIONS_EXTERNAL_STORAGE) {
             if (grantResults.length > 0) {
                 Toast.makeText(this, "permission granted", Toast.LENGTH_SHORT).show();
+                localImageDir = createLocalDirectory(IMAGES_DIRECTORY);
+                localVideoDir = createLocalDirectory(VIDEOS_DIRECTORY);
+
+                getLocalFileList(IMAGES_DIRECTORY, 0);
+                getLocalFileList(VIDEOS_DIRECTORY, 1);
             } else {
                 Toast.makeText(this, "not granted", Toast.LENGTH_SHORT).show();
             }
@@ -182,13 +286,40 @@ public class AdActivity extends Activity {
                 //Toast.makeText(context, "Layout 2 selected", Toast.LENGTH_SHORT).show();
             }
         }
+        if (requestCode == 2) {
+            if (resultCode == Activity.RESULT_OK) {
+                initializeTexts();
+            }
+        }
     }
 
+    public void initializeTexts() {
+        String headerText = sharedPreferences.getString(HEADER_TEXT, HEADER_TEXT_HINT);
+        int headerSize = Integer.valueOf(sharedPreferences.getString(HEADER_TEXT_SIZE, "0"));
+        String footerText = sharedPreferences.getString(FOOTER_TEXT, FOOTER_TEXT_HINT);
+        int footerSize = Integer.valueOf(sharedPreferences.getString(FOOTER_TEXT_SIZE, "0"));
+
+        header.setText(headerText);
+        if (headerSize != 0)
+            header.setTextSize(headerSize);
+
+        footer.setText(footerText);
+        if (footerSize != 0)
+            footer.setTextSize(footerSize);
+
+        footer.setSelected(true);
+    }
+
+    /**
+     * to display images in imageView.
+     * <p>
+     * images are changed at some constant time interval (interval).
+     */
     private void playImages() {
+        final int interval = 4000;
         r = new Runnable() {
             int i = 0;
 
-            //9780286280
             @Override
             public void run() {
                 // do stuff then
@@ -205,18 +336,19 @@ public class AdActivity extends Activity {
                     }
                     Log.d("ImageHandler", "Showing image " + i + " size=" + imageListLocal.size());
                 } else Log.d(this.getClass().getName(), "imageList is empty");
-                h.postDelayed(this, 4000);
+                h.postDelayed(this, interval);
             }
         };
 
         h.postDelayed(r, 500);
     }
 
+    /**
+     * play videos from local directory {@link AdActivity#localVideoDir}.
+     * <p>
+     * Next videos is played after completion on a video.
+     */
     private void playVideos() {
-//        if (videoView == null) {
-//            Log.d("ImageHandler", "videoView is null");
-//            return;
-//        }
         if (videoListLocal.size() <= 0) {
             Log.d(this.getClass().getName(), "video playlist size is zero");
             //return;
@@ -238,6 +370,9 @@ public class AdActivity extends Activity {
         }
     }
 
+    /**
+     * fetch file URLs from fireBase dataBase and saves it into a list.
+     */
     void getFileListFromServer() {
         DatabaseReference textRef = databaseReference.child("Text");
         textRef.addValueEventListener(new ValueEventListener() {
@@ -246,10 +381,9 @@ public class AdActivity extends Activity {
                 if (dataSnapshot.exists()) {
                     String marquee_text = dataSnapshot.getValue(String.class);
                     Log.d("marquee text", marquee_text);
-                    sharedPreferences.edit().putString(MARQUEE_TEXT, marquee_text).apply();
-                    marqueeText.setVisibility(View.VISIBLE);
-                    marqueeText.setText(marquee_text + " " + marquee_text);
-                } else marqueeText.setVisibility(View.GONE);
+                    sharedPreferences.edit().putString(FOOTER_TEXT, marquee_text).apply();
+                    footer.setText(marquee_text);
+                }
             }
 
             @Override
@@ -268,7 +402,7 @@ public class AdActivity extends Activity {
                 if (dataSnapshot.exists()) {
                     imageListServer.clear();
                     for (DataSnapshot t : dataSnapshot.getChildren()) {
-                        Log.d(this.getClass().getName(), "t_key = " + t.getKey() + " t_value = " + t.getValue());
+                        Log.d(this.getClass().getName(), " image_key = " + t.getKey() + " image_value = " + t.getValue());
                         DataModel model = t.getValue(DataModel.class);
                         //Log.d("dataModel", model.getname() + " " + model.geturl());
                         //Log.d("dataModel", model.name + " " + model.url);
@@ -276,7 +410,7 @@ public class AdActivity extends Activity {
                         //urlList.add(model.url);
                         if (!imageListServer.contains(model)) {
                             imageListServer.add(model);
-                            Log.d("dataModel_image", model.name + " " + model.url);
+                            Log.d("dataModel_image_if", model.name + " " + model.url);
                         }
                     }
 
@@ -293,7 +427,14 @@ public class AdActivity extends Activity {
         tempRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                //
+                if (dataSnapshot.exists()) {
+                    DataModel model = dataSnapshot.getValue(DataModel.class);
+                    imageListServer.add(model);
+
+                    Log.d("dataModel_image_added", dataSnapshot.getValue().toString());
+                    assert model != null;
+                    Log.d("dataModel_image_added_k", model.name + " " + model.url);
+                }
             }
 
             @Override
@@ -303,18 +444,18 @@ public class AdActivity extends Activity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d("onChildEventListener", dataSnapshot.getKey() + " " + dataSnapshot.getValue());
+                Log.d("dataModel_image", dataSnapshot.getKey() + " " + dataSnapshot.getValue());
                 DataModel dataModel = dataSnapshot.getValue(DataModel.class);
                 getLocalFileList(IMAGES_DIRECTORY, 0);
                 String fileDir = (new File(localImageDir, dataModel.name)).getAbsolutePath();
-                Log.d("onChildEventListener", "fileDir:" + fileDir);
+                Log.d("dataModel_image", "fileDir:" + fileDir);
                 if (imageListLocal.contains(fileDir)) {
-                    Log.d("onChildEventListener", "delete " + fileDir);
+                    Log.d("dataModel_image", "delete " + fileDir);
                     if (deleteFile(fileDir)) {
-                        Log.d("onChildEventListener", "successfully deleted");
+                        Log.d("dataModel_image", "successfully deleted");
                         imageListLocal.remove(fileDir);
                     } else {
-                        Log.d("onChildEventListener", "Unable to delete file");
+                        Log.d("dataModel_image", "Unable to delete file");
                     }
                 }
             }
@@ -485,6 +626,10 @@ public class AdActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //Todo remove this register issue
+        //  IntentFilter filter = new IntentFilter(ACTION_RESP);
+        //  filter.addCategory(Intent.CATEGORY_DEFAULT);
+        //  registerReceiver(receiver, filter);
         unregisterReceiver(receiver);
         h.removeCallbacks(r);
         Log.d("onDestroy", "unregisterReceiver");
