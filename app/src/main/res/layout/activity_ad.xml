@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    tools:context="cpm.advancetect.atadvertisement.AdActivity">
+    tools:context="com.advancetech.digitalsignage.AdActivity">
 
     <LinearLayout
         android:id="@+id/layoutHeader"

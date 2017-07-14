@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="cpm.advancetect.atadvertisement">
+          package="com.advancetech.digitalsignage">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
-        android:name=".MyApplication"
+        android:name="com.advancetech.digitalsignage.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -16,8 +16,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:noHistory="true"
-            android:name=".MainActivity">
+            android:name="com.advancetech.digitalsignage.MainActivity"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -26,25 +26,26 @@
         </activity>
 
         <activity
-            android:name=".AdActivity"
+            android:name="com.advancetech.digitalsignage.AdActivity"
             android:screenOrientation="sensorLandscape"/>
 
-        <activity android:name=".LayoutSelector"/>
-
-        <activity android:name=".TextEditor">
+        <activity android:name="com.advancetech.digitalsignage.Settings">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
             </intent-filter>
         </activity>
 
-        <service android:name=".DownloadService"/>
+        <service android:name="com.advancetech.digitalsignage.DownloadService"/>
 
-        <receiver android:name=".StartMyServiceAtBootReceiver">
+        <receiver android:name="com.advancetech.digitalsignage.StartMyServiceAtBootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="6f40854b50b4ab2477e6d4e8bfec5584395f84ac"/>
     </application>
 
 </manifest>

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layout_margin="0dp"
     android:orientation="vertical"
-    tools:context="cpm.advancetect.atadvertisement.MainActivity">
+    tools:context="com.advancetech.digitalsignage.MainActivity">
 
     <TextView
         android:layout_width="match_parent"

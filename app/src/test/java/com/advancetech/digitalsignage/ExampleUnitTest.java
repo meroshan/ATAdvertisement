@@ -1,4 +1,4 @@
-package cpm.advancetect.atadvertisement;
+package com.advancetech.digitalsignage;
 
 import org.junit.Test;
 

@@ -1,5 +1,6 @@
-package cpm.advancetect.atadvertisement;
+package com.advancetech.digitalsignage;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,25 +13,28 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import static cpm.advancetect.atadvertisement.MyApplication.mDatabaseRef;
-import static cpm.advancetect.atadvertisement.MyApplication.sharedPreferences;
+import io.fabric.sdk.android.Fabric;
+
+import static com.advancetech.digitalsignage.MyApplication.mDatabaseRef;
+import static com.advancetech.digitalsignage.MyApplication.setFabricUserIdentifier;
+import static com.advancetech.digitalsignage.MyApplication.sharedPreferences;
 
 /**
- * This is the main Class for fetching centre list from the cloud and showing in a list
+ * Fetch Centre list from the fireBase and showing in a listView.
  */
 public class MainActivity extends AppCompatActivity {
 
     /**
-     * list of centers
+     * arrayList of centers
      */
     ArrayList<String> list = new ArrayList<>();
 
@@ -44,34 +48,38 @@ public class MainActivity extends AppCompatActivity {
      */
     String TAG = "main_activity";
 
+    ProgressDialog dialog;
+
     /**
-     * listView to show centres
+     * listView to show Centres
      */
     private ListView listView;
 
-    /**
-     * @param savedInstanceState
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics(), new Answers());
         setContentView(R.layout.activity_main);
 
-        //startActivity(new Intent(this, MainActivity.class));
-        Log.d(TAG, "onCreate called");
-
-        /**
-         * initializing FireBase reference & listView
-         */
+        // initializing FireBase reference & listView
         mDatabaseRef = FirebaseDatabase.getInstance().getReference();
         listView = (ListView) findViewById(R.id.listView);
 
-        /**
+        // A progress dialog while centre list is downloading from fireBase
+        dialog = new ProgressDialog(this);
+        dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        dialog.setMessage("Centre list is loading, Please wait!");
+        dialog.setIndeterminate(true);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+
+        /*
          * this checks if the centre name is stored in the sharedPreference.
          * If center name is saved then start AdActivity and finish this activity
          * so that user can't come back to this activity.
          */
         if (!sharedPreferences.getString("current_center", "NULL").equals("NULL")) {
+            dialog.cancel();
             startActivity(new Intent(MainActivity.this, AdActivity.class));
             finish();
         }
@@ -79,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, list);
         listView.setAdapter(adapter);
 
+        // when user selects a centre, it is saved in sharePreferences for further use in other activities
         listView.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     @Override
@@ -88,8 +97,8 @@ public class MainActivity extends AppCompatActivity {
 
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         if (editor.putString("current_center", center).commit()) {
+                            setFabricUserIdentifier();
                             Intent intent = new Intent(MainActivity.this, AdActivity.class);
-                            //intent.putExtra("selected_center", center);
                             startActivity(intent);
                         } else {
                             Log.d(this.getClass().getName(), "Unable to save center name in sharedPreferences");
@@ -99,13 +108,15 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
+        // addValueListener on centre list
         mDatabaseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 list.clear();
+                dialog.cancel();
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    GenericTypeIndicator<List<String>> genericTypeIndicator = new GenericTypeIndicator<List<String>>() {
-                    };
+//                    GenericTypeIndicator<List<String>> genericTypeIndicator = new GenericTypeIndicator<List<String>>() {
+//                    };
                     Log.d("Center List ", postSnapshot.getKey());
                     String center = postSnapshot.getKey();
                     if (!list.contains(center)) {
@@ -121,29 +132,5 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "unable to fetch list", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy called");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop called");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause called");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume called");
     }
 }

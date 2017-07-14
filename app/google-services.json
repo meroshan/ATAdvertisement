@@ -1,27 +1,27 @@
 {
   "project_info": {
-    "project_number": "679349987820",
-    "firebase_url": "https://advtech-e98fc.firebaseio.com",
-    "project_id": "advtech-e98fc",
-    "storage_bucket": "advtech-e98fc.appspot.com"
+    "project_number": "336728296132",
+    "firebase_url": "https://digital-signage-b5c86.firebaseio.com",
+    "project_id": "digital-signage-b5c86",
+    "storage_bucket": "digital-signage-b5c86.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:679349987820:android:b3fbd2dc77025be5",
+        "mobilesdk_app_id": "1:336728296132:android:7e19411442049406",
         "android_client_info": {
-          "package_name": "cpm.advancetect.atadvertisement"
+          "package_name": "com.advancetech.digitalsignage"
         }
       },
       "oauth_client": [
         {
-          "client_id": "679349987820-jrn57imdvs3a4i945rrdqpeddn1lre0t.apps.googleusercontent.com",
+          "client_id": "336728296132-go4ruifii1t4vvmboraqlcs5sua18iq3.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAC6xSpUaJqAlmsGciyft-JhYLW2gldbDw"
+          "current_key": "AIzaSyAQu-vpiIM2EXyh7HrDzVtGM0_yud8sxvQ"
         }
       ],
       "services": {

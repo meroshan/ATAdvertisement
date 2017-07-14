@@ -9,4 +9,5 @@
         <item>center 3</item>
         <item>center 4</item>
     </string-array>
+    <string name="color_picker_title">Choose color</string>
 </resources>

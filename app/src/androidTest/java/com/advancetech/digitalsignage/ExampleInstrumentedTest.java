@@ -1,4 +1,4 @@
-package cpm.advancetect.atadvertisement;
+package com.advancetech.digitalsignage;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("cpm.advancetect.atadvertisement", appContext.getPackageName());
+        assertEquals("cpm.advancetect.digitalsignage", appContext.getPackageName());
     }
 }
